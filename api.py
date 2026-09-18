@@ -152,6 +152,22 @@ class RecommendationResponse(BaseModel):
     pipeline_source: str = "rag"  # "rag" or "fallback"
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: Optional[List[ChatMessage]] = None
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    sources: List[str] = Field(default_factory=list)
+    pipeline_source: str = "rag"
+
+
 # ---------------------------------------------------------------------------
 # Supabase Client & Strict Auth Verification
 # ---------------------------------------------------------------------------
@@ -460,6 +476,17 @@ def _generate_with_retry_and_fallback(
 # Endpoints
 # ---------------------------------------------------------------------------
 
+@app.get("/", tags=["System"])
+def root():
+    """Root endpoint providing quick service info and Swagger documentation link."""
+    return {
+        "service": "Fitness RAG API",
+        "status": "online",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health", tags=["System"])
 def health_check():
     """Health check endpoint to verify API and connected components."""
@@ -708,6 +735,70 @@ def get_recommendations(
             log.warning("Could not persist recommendation to Supabase: %s", e)
 
     return response_data
+
+
+# ---------------------------------------------------------------------------
+# Conversational AI Chat Endpoint (RAG Grounded)
+# ---------------------------------------------------------------------------
+
+CHAT_SYSTEM_INSTRUCTION = """You are Aura Coach, an elite, encouraging, and evidence-based AI fitness assistant built into the Aura Fit mobile app.
+You provide clear, actionable, and scientifically grounded answers on workout splits, biomechanics, exercise technique, nutrition, progressive overload, recovery, and injury prevention.
+Answer directly using the retrieved exercise science context when relevant.
+Keep responses concise, clear, and easy to read on mobile devices (use bullet points and bold highlights).
+If asked about severe pain or medical conditions, advise consulting a physical therapist or physician while providing safe general exercise modifications."""
+
+
+@app.post("/chat", response_model=ChatResponse, tags=["Chat"])
+def chat_with_coach(
+    request: ChatRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Conversational RAG endpoint:
+    1. Retrieves relevant fitness science documents from Qdrant via Cohere reranking.
+    2. Constructs grounded context.
+    3. Generates conversational coaching advice using Gemini.
+    """
+    query = request.message.strip()
+    log.info("[CHAT] query: '%s' from user=%s", query, user_id)
+
+    retrieved_knowledge = ""
+    sources = []
+    try:
+        retrieved_knowledge = retrieve(query=query)
+        if retrieved_knowledge:
+            for block in retrieved_knowledge.split("\n\n"):
+                if block.startswith("## "):
+                    title = block.split("\n")[0].replace("## ", "").strip()
+                    if title and title not in sources:
+                        sources.append(title)
+    except Exception as e:
+        log.warning("Chat RAG retrieval notice: %s", e)
+
+    chat_context = (
+        f"RETRIEVED EXERCISE SCIENCE RESEARCH & KNOWLEDGE BASE:\n"
+        f"{retrieved_knowledge if retrieved_knowledge else 'Focus on general evidence-based training principles, progressive overload, proper form, and recovery.'}"
+    )
+
+    try:
+        reply = _generate_with_retry_and_fallback(
+            query=query,
+            context=chat_context,
+            system_instruction=CHAT_SYSTEM_INSTRUCTION,
+            max_retries=2,
+        )
+        return ChatResponse(
+            reply=reply.strip(),
+            sources=sources[:3],
+            pipeline_source="rag" if retrieved_knowledge else "general",
+        )
+    except Exception as e:
+        log.error("Chat generation error: %s", e)
+        return ChatResponse(
+            reply="I am analyzing your training request. In the meantime, remember to focus on progressive overload, controlled tempo, and 48 hours of recovery between intense sessions for the same muscle group!",
+            sources=[],
+            pipeline_source="fallback",
+        )
 
 
 # ---------------------------------------------------------------------------
