@@ -1,0 +1,67 @@
+## Cardiovascular Training: HIIT, LISS, and Heart Rate Zones
+
+Cardiovascular (cardio) training improves heart health, increases work capacity, accelerates recovery between sets, and supports body composition goals. Incorporating strategic cardio alongside strength training enhances overall fitness without significantly impairing muscle growth when programmed correctly.
+
+### Heart Rate Zones
+
+Heart rate zones are defined as percentages of Maximum Heart Rate (MHR). Estimate MHR using: 220 - age (approximate) or 208 - (0.7 × age) (more accurate for trained individuals).
+
+**Zone 1 (50-60% MHR) — Active Recovery**: Light walking, gentle cycling. Minimal cardiovascular stress. Promotes blood flow for recovery. Can be performed daily without impacting training.
+
+**Zone 2 (60-70% MHR) — Aerobic Base / Fat Oxidation**: Conversational pace (can hold a conversation comfortably). Primary energy source is fat oxidation. This is the foundation of cardiovascular fitness. 80% of endurance athlete training occurs in this zone. Typical activities: brisk walking, easy jogging, cycling, swimming at an easy pace. Duration: 30-60 minutes.
+
+**Zone 3 (70-80% MHR) — Tempo / Threshold**: Comfortably hard — can speak in short sentences but not hold a conversation. Improves lactate threshold and aerobic capacity. Good for general fitness but generates more fatigue than Zone 2.
+
+**Zone 4 (80-90% MHR) — High Intensity**: Hard effort, can only speak a few words. Interval training zone. Significantly improves VO2max and anaerobic capacity. Requires 24-48 hours recovery.
+
+**Zone 5 (90-100% MHR) — Maximum Effort**: All-out sprint. Only sustainable for 15-60 seconds. Develops maximum speed and power. Used sparingly due to high nervous system fatigue and injury risk.
+
+### LISS (Low-Intensity Steady State)
+
+**What It Is**: Continuous cardiovascular exercise performed at Zone 2 (60-70% MHR) for 30-60 minutes. Examples: brisk walking on an incline (3-4 mph at 6-10% incline), easy cycling, swimming, rowing at an easy pace.
+
+**Benefits for Strength Athletes**:
+- Improves cardiac output (stroke volume) and capillary density in muscles.
+- Enhances recovery between training sessions by improving blood flow.
+- Burns approximately 300-500 calories per 45-minute session without generating significant muscle-damaging fatigue.
+- Does NOT impair muscle growth or strength gains when kept at Zone 2.
+- Reduces resting heart rate by 5-10 beats per minute over 8-12 weeks.
+
+**Programming**: 2-4 sessions per week, 30-45 minutes each. Schedule on rest days or after strength training (never before). Walking on an incline treadmill is the lowest-impact option and is ideal for lifters concerned about interference with leg recovery.
+
+### HIIT (High-Intensity Interval Training)
+
+**What It Is**: Alternating intervals of near-maximal effort (Zone 4-5, 85-95% MHR) with recovery periods (Zone 1-2). Typical work-to-rest ratios: 1:1 to 1:3.
+
+**HIIT Protocols**:
+- Tabata: 20 seconds all-out, 10 seconds rest × 8 rounds (4 minutes total). Extremely demanding. Improves both aerobic and anaerobic capacity.
+- 30/30: 30 seconds hard effort, 30 seconds easy × 10-15 rounds (10-15 minutes).
+- Sprint intervals: 15-30 second sprints with 60-90 seconds walking recovery × 6-10 rounds.
+- Rowing intervals: 500m hard effort, 90 seconds rest × 4-6 rounds.
+
+**Benefits**:
+- Time-efficient: 15-25 minutes provides cardiovascular benefits comparable to 45-60 minutes of LISS.
+- Significantly increases VO2max (5-15% improvement in 4-8 weeks).
+- Increases EPOC (Excess Post-Exercise Oxygen Consumption), burning additional calories for 12-24 hours post-session.
+- Improves insulin sensitivity and glucose metabolism.
+
+**Drawbacks for Strength Athletes**:
+- Generates significant systemic fatigue. Sprint HIIT can impair leg training recovery.
+- Should be limited to 1-2 sessions per week when primary goal is strength/hypertrophy.
+- Do not perform HIIT the day before a heavy leg training session.
+
+### Concurrent Training: Combining Cardio and Strength
+
+The "interference effect" refers to the potential for cardio to blunt strength and hypertrophy gains. Research shows this effect is real but manageable with proper programming:
+
+**Guidelines to Minimize Interference**:
+1. Separate cardio and strength by at least 6-8 hours when possible. If training same session, strength first, cardio after.
+2. Prioritize low-impact modalities (cycling, walking, swimming) over running. Running generates more eccentric muscle damage that can impair leg recovery.
+3. Keep LISS cardio in Zone 2. Zone 3 generates fatigue without the recovery benefits of Zone 2 or the capacity benefits of Zone 4-5.
+4. Limit HIIT to 1-2 sessions per week (20-25 minutes each).
+5. Total weekly cardio: 60-150 minutes is sufficient for health and body composition benefits without impairing muscle gains.
+6. Monitor recovery: if strength is declining, reduce cardio volume before reducing strength training volume.
+
+### Cardio for Fat Loss
+
+Cardio creates additional caloric expenditure but should supplement a caloric deficit, not replace it. A deficit created primarily through diet (300-500 cal) supplemented by modest cardio (200-300 cal from 3-4 LISS sessions) is the most sustainable approach that preserves muscle mass. Excessive cardio during a cut (over 5 hours per week) increases cortisol, muscle protein breakdown, and metabolic adaptation.

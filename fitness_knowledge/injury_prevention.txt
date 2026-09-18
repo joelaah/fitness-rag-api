@@ -1,0 +1,86 @@
+## Injury Prevention: Prehab, Form Cues, and Common Mistakes
+
+Injury prevention is not about avoiding hard training — it is about training smart. The vast majority of strength training injuries result from poor technique, excessive ego-loading, inadequate warm-ups, or ignoring early warning signals. Understanding common injury patterns and prevention strategies keeps athletes training consistently for years.
+
+### The Hierarchy of Injury Prevention
+
+1. **Proper Technique** — the single most important factor. Perfect form on every rep, especially under fatigue.
+2. **Progressive Loading** — gradual increases in weight (2-5% per week maximum). Dramatic jumps in load are the leading cause of acute injuries.
+3. **Adequate Warm-Up** — always perform a dynamic warm-up and exercise-specific warm-up sets before working loads.
+4. **Balanced Programming** — ensuring opposing muscle groups are trained proportionally (push:pull ratio, quad:hamstring balance).
+5. **Recovery and Rest** — training through pain, sleep deprivation, or excessive fatigue dramatically increases injury risk.
+6. **Prehab Work** — targeted exercises to strengthen commonly vulnerable joints and stabilizers.
+
+### Common Strength Training Injuries and Prevention
+
+**Rotator Cuff Injuries (Shoulder)**
+
+The rotator cuff (supraspinatus, infraspinatus, teres minor, subscapularis) stabilizes the shoulder during pressing and overhead movements. Injury typically results from:
+- Excessive internal rotation and anterior shoulder loading (too much bench press without pull volume).
+- Pressing with elbows flared to 90 degrees.
+- Overhead pressing without adequate thoracic mobility.
+
+**Prevention**:
+- Maintain a 1:1 or 1.5:1 pull-to-push volume ratio. For every set of bench press, perform at least one set of rows or pull-ups.
+- Include external rotation exercises: band external rotations (3 sets of 15-20, 2-3 times per week).
+- Face pulls: 3 sets of 15-20 with a 2-second squeeze. Targets rear deltoids and external rotators.
+- Keep bench press elbows at 45-75 degrees, never 90 degrees.
+
+**Lower Back Injuries**
+
+Lower back injuries (muscle strains, disc herniations) are typically caused by:
+- Rounding the lumbar spine under load during deadlifts, squats, or rows.
+- Hyperextending the back during overhead press or at the top of deadlifts.
+- Weak core and spinal erectors relative to hip extensors.
+
+**Prevention**:
+- Master the hip hinge pattern before loading deadlifts. Practice with a PVC pipe on the back — maintain contact with the head, upper back, and sacrum throughout the movement.
+- Brace the core before every heavy rep: take a deep breath into the belly, contract the abdominals as if expecting a punch, and maintain this brace throughout the rep.
+- Train direct core stability: dead bugs (3x10), pallof press (3x10 per side), and plank variations (3x30-60 seconds) should be performed 2-3 times per week.
+- Do not increase deadlift or squat weight by more than 5-10 lbs per week.
+
+**Knee Injuries (Patellar Tendinopathy, Meniscus)**
+
+Knee pain during squats and leg press commonly results from:
+- Excessive forward knee travel with heels rising off the floor.
+- Knee valgus (knees caving inward) during squats and lunges — indicates weak hip abductors.
+- Sudden increases in squat volume or depth.
+
+**Prevention**:
+- Strengthen hip abductors: banded clamshells (3x15), banded lateral walks (3x12 per side), single-leg glute bridges (3x10 per side).
+- Ensure adequate ankle dorsiflexion — limited ankle mobility forces the knees into poor positions.
+- Use a controlled tempo on squats (3-second eccentric minimum) to reduce impact on knee cartilage.
+- VMO (Vastus Medialis Oblique) strengthening: terminal knee extensions with a band, Peterson step-ups.
+
+**Elbow Tendinopathy (Tennis/Golfer's Elbow)**
+
+Elbow pain during curls, rows, bench press, or pull-ups is typically medial or lateral epicondylitis caused by:
+- Excessive gripping volume (heavy deadlifts + rows + pull-ups + curls in the same session).
+- Rapid increases in pull-up or curl volume.
+- Inadequate wrist and forearm conditioning.
+
+**Prevention**:
+- Limit total weekly gripping-intensive sets. If deadlifts + rows + pull-ups total more than 20 sets per week, use lifting straps on deadlifts to reduce grip fatigue.
+- Wrist curls and reverse wrist curls: 2-3 sets of 15-20, 2 times per week.
+- Eccentric wrist extensions with a light dumbbell: 3x15 (most effective treatment and prevention for lateral epicondylitis).
+
+### Prehab Protocol (10 Minutes, 3x Per Week)
+
+A simple prehab routine performed 2-3 times per week can prevent the most common strength training injuries:
+
+1. Band pull-aparts: 2x20 (shoulder health)
+2. Band external rotations: 2x15 per arm (rotator cuff)
+3. Dead bugs: 2x10 per side (core stability, lower back protection)
+4. Banded clamshells: 2x15 per side (hip abductor strength, knee protection)
+5. Wrist curls + reverse wrist curls: 2x15 each direction (elbow tendon health)
+6. Single-leg calf raises: 2x15 per leg (ankle stability)
+
+### Warning Signs: When to Stop and Seek Help
+
+- **Sharp, sudden pain during a lift**: Stop immediately. This may indicate a muscle tear, tendon injury, or joint damage.
+- **Pain that persists more than 72 hours** after exercise: Beyond normal DOMS. Consult a physiotherapist or sports medicine doctor.
+- **Joint swelling, popping, or locking**: May indicate ligament or meniscus injury. Rest and seek evaluation.
+- **Numbness or tingling** during or after exercise: May indicate nerve compression. Stop the offending exercise and consult a healthcare provider.
+- **Pain that worsens with every training session**: Do not train through escalating pain. Modify exercises, reduce load, or take additional rest days.
+
+Always remember: missing one week of training due to a controlled rest is far better than missing three months due to a preventable injury that was ignored.

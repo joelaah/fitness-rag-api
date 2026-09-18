@@ -1,0 +1,71 @@
+## Nutrition Fundamentals for Strength Training
+
+Nutrition is the fuel for recovery and adaptation. Without adequate nutrition, even the best training program will produce suboptimal results. The three primary nutritional considerations for strength training are: total caloric intake, macronutrient distribution, and meal timing.
+
+### Caloric Requirements
+
+**Maintenance Calories**: The number of calories needed to maintain current body weight. Calculate using: Body weight in lbs × 14-16 (sedentary to active) or Body weight in kg × 30-35.
+
+**Caloric Surplus (Muscle Gain)**: To build muscle optimally, consume 250-500 calories above maintenance daily. This supports approximately 0.5-1 lb (0.25-0.5 kg) of weight gain per week. A surplus larger than 500 calories does not accelerate muscle growth — it primarily increases fat gain.
+
+**Caloric Deficit (Fat Loss)**: To lose fat while preserving muscle, maintain a deficit of 300-500 calories below maintenance. Larger deficits (over 750 calories) increase muscle loss risk, reduce training performance, and impair recovery. During a cut, maintain training intensity (load on the bar) and reduce volume by 30-40% if recovery is compromised.
+
+**Body Recomposition**: Beginners, detrained individuals, and those with high body fat can simultaneously build muscle and lose fat by eating at maintenance or a slight deficit while training hard and consuming adequate protein.
+
+### Protein
+
+Protein is the most critical macronutrient for muscle repair and growth.
+
+**Daily Protein Target**: 1.6-2.2 g per kg of body weight (0.7-1.0 g per lb). A meta-analysis by Morton et al. (2018) concluded that 1.6 g/kg/day was the threshold above which additional protein provided diminishing returns for hypertrophy.
+
+**Protein Distribution**: Distribute protein intake across 3-5 meals, consuming 20-40g per meal. This maximizes muscle protein synthesis (MPS) throughout the day. A single dose of 20-25g of high-quality protein maximally stimulates MPS in young adults; 40g is recommended for older adults and larger individuals.
+
+**Protein Quality**: Complete proteins containing all essential amino acids are superior. Leucine content is the primary trigger for MPS. Best sources:
+- Whey protein: 11% leucine, rapidly absorbed. Ideal post-workout.
+- Eggs: Complete amino acid profile, high bioavailability.
+- Chicken breast: 31g protein per 100g, lean.
+- Greek yogurt: 10g protein per 100g, includes casein for sustained release.
+- Beef: 26g protein per 100g, rich in creatine and iron.
+- Fish (salmon, tuna): 20-25g protein per 100g, includes omega-3 fatty acids.
+- Legumes + grains (for plant-based athletes): Combine to achieve complete amino acid profiles.
+
+**Pre-Sleep Protein**: Consuming 30-40g of casein protein (or cottage cheese) 30-60 minutes before bed increases overnight MPS by 22% without increasing fat storage, according to research by Snijders et al. (2015).
+
+### Carbohydrates
+
+Carbohydrates fuel high-intensity exercise and replenish muscle glycogen stores.
+
+**Daily Carbohydrate Target**: 3-7 g per kg body weight depending on training volume and intensity.
+- Light training (3 days/week): 3-4 g/kg
+- Moderate training (4-5 days/week): 4-5 g/kg
+- High volume training (6 days/week): 5-7 g/kg
+
+**Timing**: Consume the majority of carbohydrates around training sessions. Pre-workout meal (1-3 hours before) should include 30-60g of complex carbohydrates. Post-workout meal should include 40-80g of carbohydrates to replenish glycogen within the 2-hour recovery window.
+
+**Carbohydrate Sources**: Prioritize complex, minimally processed sources: oats, rice, sweet potatoes, whole grain bread, fruits, quinoa, and legumes. Simple sugars (fruit juice, dextrose) are appropriate immediately post-workout for rapid glycogen replenishment.
+
+### Fats
+
+Dietary fat is essential for hormone production (especially testosterone), joint health, and vitamin absorption.
+
+**Daily Fat Target**: 0.7-1.2 g per kg body weight, or 20-35% of total calories.
+
+**Fat Sources**: Prioritize monounsaturated and polyunsaturated fats: olive oil, avocado, nuts (almonds, walnuts), fatty fish (salmon, mackerel), seeds (chia, flax). Limit saturated fat to under 10% of total calories. Avoid trans fats entirely.
+
+**Omega-3 Fatty Acids**: Consume 2-3g of EPA+DHA daily through fatty fish (2-3 servings per week) or fish oil supplementation. Omega-3s reduce exercise-induced inflammation, improve joint health, and may enhance muscle protein synthesis.
+
+### Hydration for Performance
+
+**Daily Water Intake**: Minimum 0.5 oz per pound of body weight (approximately 30-35 mL per kg). Active individuals should increase to 0.7-1.0 oz per pound.
+
+**During Training**: Drink 7-10 oz (200-300 mL) every 10-20 minutes during exercise. For sessions exceeding 60 minutes, include electrolytes (sodium, potassium).
+
+**Dehydration Impact**: A 2% loss in body weight from fluid loss reduces strength by 2%, power by 3%, and endurance capacity by up to 10%.
+
+### Key Supplements (Evidence-Based)
+
+**Creatine Monohydrate**: The most researched and effective supplement for strength and power. Take 3-5g daily (no loading phase necessary). Increases intramuscular phosphocreatine stores, improving high-intensity exercise capacity by 5-15%.
+
+**Caffeine**: 3-6 mg per kg body weight, consumed 30-60 minutes before training. Improves strength, endurance, and perceived effort. Avoid within 8 hours of bedtime to protect sleep quality.
+
+**Vitamin D**: 2000-5000 IU daily if blood levels are below 40 ng/mL. Essential for bone health, immune function, and testosterone production. Deficiency is common in indoor athletes and those in northern latitudes.

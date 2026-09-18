@@ -1,0 +1,99 @@
+## Training Splits: Programming Your Weekly Schedule
+
+A training split is how you organize which muscle groups are trained on which days throughout the week. The best split depends on training experience, schedule availability, and recovery capacity.
+
+### Full Body Training (3 Days Per Week)
+
+**Structure**: Train all major muscle groups every session. Example: Monday, Wednesday, Friday.
+
+**Best For**: Beginners (0-12 months), older adults, athletes needing sport-specific conditioning on other days, and anyone who can only train 3 days per week.
+
+**Sample Full Body Session**:
+- Barbell Squat: 3x8 (Legs, Compound)
+- Barbell Bench Press: 3x8 (Chest, Compound)
+- Barbell Row: 3x8 (Back, Compound)
+- Overhead Press: 3x8 (Shoulders, Compound)
+- Romanian Deadlift: 3x10 (Hamstrings/Glutes)
+- Plank: 3x45 seconds (Core)
+
+**Advantages**: Each muscle trained 3x per week (highest frequency). Research consistently shows that training a muscle 2-3 times per week produces more hypertrophy than once per week. Simple to program and schedule. Lower per-session volume reduces fatigue and DOMS for beginners.
+
+**Disadvantages**: Sessions can be long (60-90 minutes) to cover all muscle groups. Limited exercise variety per muscle group per session.
+
+### Upper/Lower Split (4 Days Per Week)
+
+**Structure**: Alternate upper body and lower body sessions. Example: Monday (Upper), Tuesday (Lower), Thursday (Upper), Friday (Lower).
+
+**Best For**: Intermediate lifters (1-3 years), those wanting to train 4 days per week with balanced recovery.
+
+**Sample Upper Day**:
+- Bench Press: 4x6 (Chest)
+- Barbell Row: 4x6 (Back)
+- Overhead Press: 3x8 (Shoulders)
+- Lat Pulldown: 3x10 (Back)
+- Dumbbell Curl: 3x12 (Biceps)
+- Tricep Pushdown: 3x12 (Triceps)
+
+**Sample Lower Day**:
+- Barbell Squat: 4x6 (Quads/Glutes)
+- Romanian Deadlift: 3x8 (Hamstrings/Glutes)
+- Leg Press: 3x10 (Quads)
+- Leg Curl: 3x12 (Hamstrings)
+- Calf Raises: 4x15 (Calves)
+- Ab Wheel Rollout: 3x10 (Core)
+
+**Advantages**: Each muscle trained 2x per week. Good balance of volume, frequency, and recovery. Allows more exercises per muscle group than full body.
+
+### Push/Pull/Legs (PPL) Split (6 Days Per Week)
+
+**Structure**: Three distinct sessions cycled twice per week. Push (chest, shoulders, triceps), Pull (back, biceps, rear delts), Legs (quads, hamstrings, glutes, calves).
+
+**Example Schedule**: Monday (Push), Tuesday (Pull), Wednesday (Legs), Thursday (Push), Friday (Pull), Saturday (Legs), Sunday (Rest).
+
+**Best For**: Intermediate to advanced lifters with time to train 6 days per week and sufficient recovery capacity.
+
+**Sample Push Day**:
+- Bench Press: 4x6
+- Incline Dumbbell Press: 3x10
+- Cable Fly: 3x12
+- Overhead Press: 3x8
+- Lateral Raise: 3x15
+- Tricep Dips: 3x10
+- Overhead Tricep Extension: 3x12
+
+**Sample Pull Day**:
+- Deadlift or Barbell Row: 4x5
+- Weighted Pull-Ups: 3x8
+- Cable Row: 3x10
+- Face Pull: 3x15
+- Barbell Curl: 3x10
+- Hammer Curl: 3x12
+
+**Sample Leg Day**:
+- Barbell Squat: 4x6
+- Romanian Deadlift: 3x8
+- Bulgarian Split Squat: 3x10 each leg
+- Leg Extension: 3x12
+- Leg Curl: 3x12
+- Standing Calf Raise: 4x12
+- Hanging Leg Raise: 3x15
+
+**Advantages**: High volume and frequency (each muscle 2x/week). Maximum exercise variety. Clear session focus prevents rushing.
+
+**Disadvantages**: Requires 6 training days per week. High total weekly volume may impair recovery for those with demanding jobs or poor sleep. Not appropriate for true beginners.
+
+### The Bro Split (5 Days Per Week)
+
+**Structure**: One muscle group per day. Example: Monday (Chest), Tuesday (Back), Wednesday (Shoulders), Thursday (Arms), Friday (Legs).
+
+**Best For**: Advanced bodybuilders who need extreme per-session volume for specific lagging muscle groups.
+
+**Disadvantage**: Each muscle only trained once per week, which research shows is suboptimal for natural lifters seeking hypertrophy. The PPL or Upper/Lower split almost always produces superior results for non-enhanced athletes.
+
+### Choosing Your Split: Decision Framework
+
+- Can train 3 days/week → Full Body
+- Can train 4 days/week → Upper/Lower
+- Can train 5 days/week → Upper/Lower/Push/Pull/Legs hybrid
+- Can train 6 days/week → Push/Pull/Legs
+- Beginner (any frequency) → Full Body for first 3-6 months

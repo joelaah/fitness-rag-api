@@ -1,0 +1,37 @@
+## Progressive Overload: The Foundation of Strength Training
+
+Progressive overload is the gradual increase of stress placed upon the body during exercise training. It is the single most important principle for continued strength and muscle gains. Without progressive overload, the body has no reason to adapt and grow stronger.
+
+### Methods of Progressive Overload
+
+There are several evidence-based methods to apply progressive overload:
+
+**Increasing Load (Weight)**: The most direct method. Add 2.5-5 lbs (1-2.5 kg) to upper body lifts and 5-10 lbs (2.5-5 kg) to lower body lifts when you can complete all prescribed sets and reps with good form. For example, if your program calls for 3 sets of 8 reps on bench press at 135 lbs and you successfully complete all 24 reps, increase to 140 lbs next session.
+
+**Increasing Repetitions**: If you cannot add weight, add 1-2 reps per set while maintaining the same load. Once you reach the top of your rep range (e.g., 12 reps in an 8-12 range), increase the weight and drop back to the bottom of the range.
+
+**Increasing Sets (Volume)**: Add one additional set per exercise per week. Research by Schoenfeld et al. (2017) shows that higher training volumes (10+ sets per muscle group per week) are associated with greater hypertrophy, up to a point of diminishing returns around 20-25 sets per muscle group per week.
+
+**Increasing Training Frequency**: Training a muscle group 2-3 times per week produces superior hypertrophy compared to once per week when volume is equated, according to a meta-analysis by Schoenfeld et al. (2016).
+
+**Decreasing Rest Periods**: Reducing rest between sets from 3 minutes to 2 minutes increases metabolic stress, though this should not compromise form or significantly reduce load.
+
+### Periodization Models
+
+**Linear Periodization**: Gradually increase intensity (weight) while decreasing volume (reps) over a training cycle of 4-12 weeks. Example: Week 1-3 at 3x12, Week 4-6 at 4x8, Week 7-9 at 5x5, Week 10-12 at 6x3.
+
+**Undulating Periodization (DUP)**: Vary intensity and volume within a single week. Example: Monday heavy (5x5), Wednesday moderate (3x10), Friday light (3x15). Research by Rhea et al. (2002) suggests DUP may produce slightly faster strength gains than linear periodization.
+
+**Block Periodization**: Concentrate on one training quality per 3-4 week block. Block 1: Hypertrophy (high volume, moderate intensity). Block 2: Strength (moderate volume, high intensity). Block 3: Peaking (low volume, very high intensity).
+
+### Deload Weeks
+
+Every 4-6 weeks, reduce training volume and/or intensity by 40-60% for one week. Deloads allow accumulated fatigue to dissipate, preventing overtraining and reducing injury risk. Signs you need a deload: persistent joint pain, plateaued or declining performance, poor sleep quality, lack of motivation.
+
+### Rate of Progression by Training Experience
+
+Beginners (0-1 year): Can increase weight every session (Novice Linear Progression). Expect to add 2.5-5 kg per week on major lifts.
+
+Intermediate (1-3 years): Progress every 1-2 weeks. May need weekly or biweekly periodization to continue advancing.
+
+Advanced (3+ years): Monthly or cyclical progression. Gains of 1-2% per month in strength are realistic. Detailed periodization and autoregulation become essential.

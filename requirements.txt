@@ -1,0 +1,26 @@
+# Google GenAI SDK (official modern Gemini API client)
+google-genai>=0.1.1
+
+# Vector Database for multimodal embeddings & retrieval
+qdrant-client>=1.11.0
+
+# Frontend UI framework
+streamlit>=1.38.0
+
+# Environment variable management
+python-dotenv>=1.0.1
+
+# Multimodal image handling
+pillow>=10.4.0
+
+# PDF document parsing
+pypdf>=5.0.0
+
+# Cohere Rerank SDK for two-stage retrieval
+cohere>=5.0.0
+
+# API Layer for Fitness App integration
+fastapi>=0.110.0
+uvicorn>=0.29.0
+supabase>=2.4.0
+pydantic>=2.6.0

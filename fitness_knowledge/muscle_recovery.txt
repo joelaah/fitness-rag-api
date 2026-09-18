@@ -1,0 +1,45 @@
+## Muscle Recovery Science: Rest, Sleep, and Adaptation
+
+Recovery is the process by which the body repairs exercise-induced muscle damage, replenishes energy stores, and adapts to become stronger. Without adequate recovery, training adaptations stall and injury risk increases substantially.
+
+### The Recovery Timeline
+
+**Immediate Recovery (0-2 hours post-exercise)**: Muscle protein synthesis (MPS) is elevated. This is the optimal window for consuming 20-40g of high-quality protein. Blood flow returns to baseline, and initial inflammatory responses begin the repair process.
+
+**Short-Term Recovery (24-72 hours post-exercise)**: Delayed Onset Muscle Soreness (DOMS) typically peaks 24-48 hours after exercise. MPS remains elevated for 24-72 hours in trained individuals. The muscle is actively repairing microtears and laying down new contractile proteins.
+
+**Long-Term Recovery (72-168 hours)**: Full structural repair and supercompensation occur. The muscle is now stronger than before the training stimulus, provided adequate nutrition and sleep were maintained.
+
+### Sleep and Recovery
+
+Sleep is the single most important recovery factor. During deep sleep (stages 3 and 4), the body releases approximately 70% of daily growth hormone (GH), which is critical for muscle repair and growth.
+
+**Sleep Duration**: 7-9 hours per night is optimal for athletic recovery. Research by Mah et al. (2011) showed that extending sleep to 10 hours per night improved athletic performance, reaction time, and mood in collegiate athletes.
+
+**Sleep Quality Markers**: Consistent sleep and wake times (within 30 minutes), dark and cool room (65-68°F / 18-20°C), limiting screen exposure 60 minutes before bed, and avoiding caffeine within 8 hours of bedtime.
+
+**Sleep Deprivation Effects**: Even one night of poor sleep (under 6 hours) reduces testosterone by 10-15%, impairs glucose metabolism, increases cortisol by 37-45%, and reduces muscle protein synthesis rates. Chronic sleep deprivation (under 6 hours for multiple nights) significantly impairs strength, power output, and injury recovery.
+
+### Rest Between Training Sessions
+
+**Same Muscle Group**: Allow 48-72 hours between intense training sessions for the same muscle group. This allows completion of the repair-adaptation cycle. Training a sore muscle with high intensity can extend recovery time rather than accelerate it.
+
+**Active Recovery**: Light movement (walking, swimming, yoga) on rest days increases blood flow without adding training stress. Active recovery at 30-60% of maximum effort for 20-30 minutes accelerates lactate clearance and reduces perceived soreness.
+
+**Full Rest Days**: At least 1-2 complete rest days per week are recommended. Highly trained athletes may benefit from 1 rest day per week, while beginners should take 2-3 rest days per week.
+
+### Hydration and Recovery
+
+Dehydration of just 2% body weight impairs exercise performance, cognitive function, and recovery speed. Aim for 0.5-1.0 oz of water per pound of body weight daily (approximately 30-40 mL per kg). During and after exercise, replace fluids at a rate of 16-24 oz (500-700 mL) per pound of body weight lost during exercise.
+
+Electrolyte balance (sodium, potassium, magnesium) is critical for muscle contraction and recovery. Post-workout electrolyte replenishment is important when sessions exceed 60 minutes or occur in high heat.
+
+### Recovery Modalities
+
+**Cold Water Immersion (Ice Baths)**: 10-15 minutes at 50-59°F (10-15°C) may reduce inflammation and perceived soreness. However, regular use may blunt long-term hypertrophy adaptations by suppressing the inflammatory signaling needed for muscle growth. Best reserved for competition recovery, not regular training.
+
+**Foam Rolling and Self-Myofascial Release**: 1-2 minutes per muscle group can temporarily improve range of motion by 10-15% and reduce DOMS perception. Does not appear to impair strength or power when performed pre-exercise.
+
+**Massage**: Professional sports massage can reduce cortisol by 31% and increase serotonin and dopamine by approximately 28-31%, improving perceived recovery. Most effective 2-6 hours post-exercise.
+
+**Contrast Water Therapy**: Alternating 1-2 minutes hot (100-104°F / 38-40°C) and 1-2 minutes cold (50-59°F / 10-15°C) for 15-20 minutes total may improve blood flow and reduce muscle stiffness.

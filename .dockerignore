@@ -1,0 +1,27 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.example
+
+# Streamlit (not needed for API deployment)
+.streamlit
+app.py
+
+# Test files
+test_*.py
+micro_test_doc.txt
+
+# Documentation & knowledge graph
+*.md
+graphify-out
+.agents
+skills-lock.json
+
+# Fitness knowledge source docs (already ingested into Qdrant)
+fitness_knowledge

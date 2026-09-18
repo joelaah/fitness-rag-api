@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# Python Virtual Environments & Bytecode
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+
+# Streamlit secrets (NEVER commit)
+.streamlit/secrets.toml
+
+# Streamlit cache
+.streamlit/cache/
+
+# Graphify output (regenerable)
+graphify-out/
+
+# Agents config (local only)
+.agents/
