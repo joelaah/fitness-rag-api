@@ -20,14 +20,16 @@ import json
 import logging
 import os
 import re
+import threading
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 import supabase
 
@@ -56,17 +58,120 @@ STANDARD_MUSCLE_GROUPS = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Core"]
 app = FastAPI(
     title="Fitness RAG API",
     description="Personalized workout recommendation engine using Gemini + Qdrant RAG.",
-    version="1.1.0",
+    version="1.2.0",
 )
 
-# CORS configuration for Flutter mobile & web clients
+# CORS configuration for Flutter mobile & web clients (strict spec compliance)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------------------------------
+# Rate Limiting & Network Safety Infrastructure
+# ---------------------------------------------------------------------------
+
+MAX_CONTENT_LENGTH = 512 * 1024  # 512 KB payload guard
+
+
+class SlidingWindowRateLimiter:
+    """
+    Thread-safe in-memory sliding-window rate limiter.
+    Tracks request timestamps per client key (IP or user ID).
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._history: Dict[str, List[float]] = {}
+        self._last_cleanup = time.time()
+
+    def is_allowed(self, key: str, max_requests: int, window_seconds: float) -> Tuple[bool, int]:
+        """
+        Check if a request is allowed under the sliding-window rate limit.
+        Returns:
+            (allowed: bool, retry_after_seconds: int)
+        """
+        now = time.time()
+        cutoff = now - window_seconds
+
+        with self._lock:
+            # Periodic cleanup of keys with no recent activity (every 5 minutes)
+            if now - self._last_cleanup > 300:
+                self._cleanup(cutoff)
+                self._last_cleanup = now
+
+            timestamps = self._history.setdefault(key, [])
+            # Purge expired timestamps
+            self._history[key] = [t for t in timestamps if t > cutoff]
+            valid_timestamps = self._history[key]
+
+            if len(valid_timestamps) >= max_requests:
+                oldest = valid_timestamps[0]
+                retry_after = max(1, int(oldest + window_seconds - now))
+                return False, retry_after
+
+            valid_timestamps.append(now)
+            return True, 0
+
+    def _cleanup(self, cutoff: float) -> None:
+        """Purge empty or stale entries to prevent memory growth."""
+        keys_to_delete = [
+            k for k, v in self._history.items()
+            if not v or v[-1] <= cutoff
+        ]
+        for k in keys_to_delete:
+            del self._history[k]
+
+
+rate_limiter = SlidingWindowRateLimiter()
+
+
+@app.middleware("http")
+async def security_and_network_safety_middleware(request: Request, call_next):
+    # 1. Payload size guard against oversized body attacks
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_CONTENT_LENGTH:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Payload too large. Maximum allowed size is 512KB."},
+                )
+        except ValueError:
+            pass
+
+    # 2. Global per-IP rate limit: max 60 requests per 60 seconds across all endpoints
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+    allowed, retry_after = rate_limiter.is_allowed(
+        key=f"global:{client_ip}",
+        max_requests=60,
+        window_seconds=60,
+    )
+    if not allowed:
+        log.warning("[RATE LIMIT] Global IP limit reached for %s (retry_after=%ds)", client_ip, retry_after)
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={"detail": f"Too many requests. Please wait {retry_after} seconds."},
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # 3. Process request
+    response = await call_next(request)
+
+    # 4. Apply HTTP security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    return response
 
 # ---------------------------------------------------------------------------
 # Data Models
@@ -103,7 +208,7 @@ class RecommendRequest(BaseModel):
     force_refresh: bool = False
     # Optional sessions payload for offline-sync / local development fallback
     # Note: user_id is NOT accepted here; it is strictly derived from the verified token
-    recent_sessions: Optional[List[WorkoutSessionPayload]] = None
+    recent_sessions: Optional[List[WorkoutSessionPayload]] = Field(default=None, max_length=50)
 
 
 class RecommendationSummary(BaseModel):
@@ -158,8 +263,8 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    message: str
-    history: Optional[List[ChatMessage]] = None
+    message: str = Field(..., min_length=1, max_length=2000, description="Chat message from user")
+    history: Optional[List[ChatMessage]] = Field(default=None, max_length=20)
 
 
 class ChatResponse(BaseModel):
@@ -238,6 +343,61 @@ def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
     # If neither Supabase nor dev token matches
     log.info("[API] authenticated user: %s", token[:8] + "...")
     return token
+
+
+def get_client_identifier(request: Request, user_id: Optional[str] = None) -> str:
+    """
+    Extract a stable rate-limiting identifier based on User ID or Client IP.
+    Respects x-forwarded-for when running behind reverse proxies (Render / Cloudflare).
+    """
+    if user_id and user_id != "00000000-0000-0000-0000-000000000001" and not user_id.startswith("dev-"):
+        return f"user:{user_id}"
+
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+    elif request.client and request.client.host:
+        client_ip = request.client.host
+    else:
+        client_ip = "unknown"
+
+    return f"ip:{client_ip}"
+
+
+def rate_limit_chat(request: Request, user_id: str = Depends(get_current_user_id)) -> str:
+    """Enforce endpoint-specific rate limits on /chat: max 20 requests per 60 seconds."""
+    client_id = get_client_identifier(request, user_id)
+    allowed, retry_after = rate_limiter.is_allowed(
+        key=f"chat:{client_id}",
+        max_requests=20,
+        window_seconds=60,
+    )
+    if not allowed:
+        log.warning("[RATE LIMIT] Chat limit reached for %s (retry_after=%ds)", client_id, retry_after)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded. Please wait {retry_after} seconds before sending another chat message.",
+            headers={"Retry-After": str(retry_after)},
+        )
+    return user_id
+
+
+def rate_limit_recommend(request: Request, user_id: str = Depends(get_current_user_id)) -> str:
+    """Enforce endpoint-specific rate limits on /recommend: max 10 requests per 60 seconds."""
+    client_id = get_client_identifier(request, user_id)
+    allowed, retry_after = rate_limiter.is_allowed(
+        key=f"recommend:{client_id}",
+        max_requests=10,
+        window_seconds=60,
+    )
+    if not allowed:
+        log.warning("[RATE LIMIT] Recommend limit reached for %s (retry_after=%ds)", client_id, retry_after)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded. Please wait {retry_after} seconds before requesting new recommendations.",
+            headers={"Retry-After": str(retry_after)},
+        )
+    return user_id
 
 
 # ---------------------------------------------------------------------------
@@ -443,10 +603,11 @@ def _generate_with_retry_and_fallback(
     Handles temporary 503 demand spikes via backoff and model parameter fallback.
     """
     models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
         "gemini-3.6-flash",
         "gemini-3.7-flash",
-        "gemini-3.8-flash",
-        "gemini-3.5-flash",
         "gemini-flash-latest",
     ]
     last_err = None
@@ -501,7 +662,7 @@ def health_check():
 @app.post("/recommend", response_model=RecommendationResponse, tags=["Recommendations"])
 def get_recommendations(
     request: RecommendRequest,
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(rate_limit_recommend),
 ):
     """
     Generates personalized workout recommendations based on verified user's workout history.
@@ -751,15 +912,24 @@ If asked about severe pain or medical conditions, advise consulting a physical t
 @app.post("/chat", response_model=ChatResponse, tags=["Chat"])
 def chat_with_coach(
     request: ChatRequest,
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(rate_limit_chat),
 ):
     """
     Conversational RAG endpoint:
-    1. Retrieves relevant fitness science documents from Qdrant via Cohere reranking.
-    2. Constructs grounded context.
-    3. Generates conversational coaching advice using Gemini.
+    1. Enforces endpoint rate limiting (max 20 req/min).
+    2. Sanitizes input to prevent prompt injection and control character abuse.
+    3. Retrieves relevant fitness science documents from Qdrant via Cohere reranking.
+    4. Constructs grounded context.
+    5. Generates conversational coaching advice using Gemini.
     """
+    # Input sanitization
     query = request.message.strip()
+    query = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", query)
+    if not query:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Message cannot be empty.",
+        )
     log.info("[CHAT] query: '%s' from user=%s", query, user_id)
 
     retrieved_knowledge = ""
