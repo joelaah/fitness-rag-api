@@ -24,7 +24,7 @@ from google.genai import types
 load_dotenv()
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-GENERATION_MODEL = "gemini-3.6-flash"
+GENERATION_MODEL = "gemini-3.8-flash"
 
 SYSTEM_INSTRUCTION = (
     "You are a strict question-answering assistant. "
