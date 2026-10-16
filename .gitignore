@@ -19,3 +19,9 @@ graphify-out/
 
 # Agents config (local only)
 .agents/
+
+# Study guides, interview preparation & personal recruiter notes
+MASTER_INTERVIEW_STUDY_GUIDE.md
+INTERVIEW_PREP_RAG_ARCHITECTURE.md
+*interview*
+*INTERVIEW*

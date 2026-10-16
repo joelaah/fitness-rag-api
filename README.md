@@ -31,6 +31,21 @@ High-performance, two-stage Retrieval-Augmented Generation (RAG) backend powerin
 
 ---
 
+## 💳 Razorpay Split Payment & Idempotency Router (`/payments`)
+
+The API exposes a production-ready, idempotent payment router (`payment_router.py` mounted at `/payments`):
+
+| Method | Endpoint | Description | Security & Invariants |
+|---|---|---|---|
+| `GET` | `/payments/config` | Returns active public config | Exposes `razorpay_key_id`, currency (`INR`), platform fee % |
+| `POST` | `/payments/create-order` | Creates idempotent Razorpay split order | Dual-layer idempotency (in-memory lock + Postgres 23505 handler), AES-256-GCM metadata encryption at rest |
+| `POST` | `/payments/verify` | Verifies client checkout signature | Constant-time `hmac.compare_digest` checking, transitions state to `captured` |
+| `POST` | `/payments/webhook` | Receives Razorpay webhook events | Validates `X-Razorpay-Signature` against webhook secret, processes captures & refunds |
+| `GET` | `/payments/history` | Multi-tenant transaction history | Strictly isolated to authenticated user/trainer via Supabase JWT |
+
+- **Zero-Double-Debit Guarantee**: Duplicate requests with matching `idempotency_key` instantly replay the original order without contacting the gateway or double-charging.
+- **100% Test Coverage**: Verified across 15 math guardrail & pipeline tests (`tests/test_math_guardrails.py`) and 16 payment & split order integration tests (`tests/integration/test_payments_and_chat.py` in the frontend repo).
+
 ## 🛠️ Local Setup
 
 ```bash

@@ -71,6 +71,14 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
+# Payment Router Integration (Milestone 2)
+# ---------------------------------------------------------------------------
+from payment_router import router as payment_router
+
+app.include_router(payment_router)
+
+
+# ---------------------------------------------------------------------------
 # Rate Limiting & Network Safety Infrastructure
 # ---------------------------------------------------------------------------
 
