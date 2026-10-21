@@ -74,8 +74,10 @@ app.add_middleware(
 # Payment Router Integration (Milestone 2)
 # ---------------------------------------------------------------------------
 from payment_router import router as payment_router
+from nutrition_router import router as nutrition_router
 
 app.include_router(payment_router)
+app.include_router(nutrition_router)
 
 
 # ---------------------------------------------------------------------------
@@ -143,10 +145,13 @@ async def security_and_network_safety_middleware(request: Request, call_next):
     content_length = request.headers.get("content-length")
     if content_length:
         try:
-            if int(content_length) > MAX_CONTENT_LENGTH:
+            is_nutrition = request.url.path.startswith("/nutrition/")
+            max_limit = 15 * 1024 * 1024 if is_nutrition else MAX_CONTENT_LENGTH
+            if int(content_length) > max_limit:
+                limit_label = "15MB" if is_nutrition else "512KB"
                 return JSONResponse(
                     status_code=413,
-                    content={"detail": "Payload too large. Maximum allowed size is 512KB."},
+                    content={"detail": f"Payload too large. Maximum allowed size is {limit_label}."},
                 )
         except ValueError:
             pass
@@ -263,6 +268,7 @@ class RecommendationResponse(BaseModel):
     sessions_analyzed: int
     cached: bool = False
     pipeline_source: str = "rag"  # "rag" or "fallback"
+    nutrition_today: Optional[Dict[str, Any]] = None
 
 
 class ChatMessage(BaseModel):
@@ -732,6 +738,58 @@ def get_recommendations(
 
     log.info("[API] sessions retrieved: %d", len(sessions))
 
+    # Step 2b: Retrieve today's nutrition intake for user
+    today_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_start = f"{today_date}T00:00:00Z"
+    nutrition_today = {
+        "logged_meals": 0,
+        "total_calories": 0.0,
+        "total_protein_g": 0.0,
+        "total_carbs_g": 0.0,
+        "total_fat_g": 0.0,
+        "target_calories": 2000,
+        "target_protein_g": 150,
+        "target_carbs_g": 200,
+        "target_fat_g": 65,
+    }
+    if sb_admin:
+        try:
+            nut_res = (
+                sb_admin.table("nutrition_logs")
+                .select("*")
+                .eq("user_id", db_user_id)
+                .gte("logged_at", today_start)
+                .order("logged_at", desc=False)
+                .execute()
+            )
+            if nut_res.data:
+                logs = nut_res.data
+                nutrition_today["logged_meals"] = len(logs)
+                nutrition_today["total_calories"] = round(sum(float(l.get("total_calories") or 0.0) for l in logs), 1)
+                nutrition_today["total_protein_g"] = round(sum(float(l.get("total_protein_g") or 0.0) for l in logs), 1)
+                nutrition_today["total_carbs_g"] = round(sum(float(l.get("total_carbs_g") or 0.0) for l in logs), 1)
+                nutrition_today["total_fat_g"] = round(sum(float(l.get("total_fat_g") or 0.0) for l in logs), 1)
+
+            prof_res = (
+                sb_admin.table("profiles")
+                .select("target_calories, target_protein_g, target_carbs_g, target_fat_g")
+                .eq("id", db_user_id)
+                .limit(1)
+                .execute()
+            )
+            if prof_res.data:
+                p = prof_res.data[0]
+                if p.get("target_calories"):
+                    nutrition_today["target_calories"] = int(p["target_calories"])
+                if p.get("target_protein_g"):
+                    nutrition_today["target_protein_g"] = int(p["target_protein_g"])
+                if p.get("target_carbs_g"):
+                    nutrition_today["target_carbs_g"] = int(p["target_carbs_g"])
+                if p.get("target_fat_g"):
+                    nutrition_today["target_fat_g"] = int(p["target_fat_g"])
+        except Exception as e:
+            log.warning("Supabase nutrition fetch notice: %s", e)
+
     # Step 3: Compute deterministic training context
     stats = calculate_deterministic_statistics(sessions)
     log.info("[API] training context created")
@@ -778,6 +836,7 @@ def get_recommendations(
             "sessions_analyzed": 0,
             "cached": False,
             "pipeline_source": "rag",
+            "nutrition_today": nutrition_today,
         }
 
     # Step 4: RAG Retrieval from Qdrant via unmodified retrieve.py
@@ -798,9 +857,19 @@ def get_recommendations(
         log.info("[RAG] retrieved chunks: 0")
 
     # Step 5: Combine context & invoke unmodified generate.py
+    nutrition_text_summary = (
+        f"TODAY'S MACRONUTRITION INTAKE (FACTS):\n"
+        f"- Logged Meals Today: {nutrition_today['logged_meals']}\n"
+        f"- Energy: {nutrition_today['total_calories']:.0f} / {nutrition_today['target_calories']} kcal\n"
+        f"- Protein: {nutrition_today['total_protein_g']:.0f} / {nutrition_today['target_protein_g']}g\n"
+        f"- Carbohydrates: {nutrition_today['total_carbs_g']:.0f} / {nutrition_today['target_carbs_g']}g\n"
+        f"- Dietary Fat: {nutrition_today['total_fat_g']:.0f} / {nutrition_today['target_fat_g']}g\n\n"
+    )
+
     generator_context = (
         f"DETERMINISTIC USER TRAINING STATISTICS (DO NOT RECALCULATE, USE AS FACTS):\n"
         f"{stats['text_summary']}\n\n"
+        f"{nutrition_text_summary}"
         f"RETRIEVED EXERCISE SCIENCE & RECOVERY PRINCIPLES:\n"
         f"{retrieved_knowledge if retrieved_knowledge else 'Focus on progressive overload, balanced muscle group frequency, and 48-hour recovery between intense muscle sessions.'}"
     )
@@ -880,6 +949,7 @@ def get_recommendations(
         "sessions_analyzed": stats["sessions_analyzed"],
         "cached": False,
         "pipeline_source": pipeline_source,
+        "nutrition_today": nutrition_today,
     }
 
     # Step 7: Store in Supabase ai_recommendations table
