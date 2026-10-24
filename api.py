@@ -75,6 +75,11 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 from payment_router import router as payment_router
 from nutrition_router import router as nutrition_router
+from fitness_math import (
+    volume_balance_score,
+    progressive_overload,
+    workout_intensity,
+)
 
 app.include_router(payment_router)
 app.include_router(nutrition_router)
@@ -522,13 +527,36 @@ def calculate_deterministic_statistics(sessions: List[Dict[str, Any]]) -> Dict[s
         total_days = max(1.0, (session_dates[-1] - session_dates[0]).total_seconds() / 86400.0)
         freq_per_week = round((len(session_dates) / total_days) * 7.0, 1)
 
+    # Calculate volume balance score via Shannon entropy
+    balance = volume_balance_score(active_volume_by_muscle)
+
+    # Calculate progressive overload if at least 2 sessions are present
+    overload_summary = ""
+    if len(sessions) >= 2:
+        def _get_vol(s):
+            vol = 0.0
+            for ex in (s.get("exercises", []) or s.get("workout_exercises", [])):
+                for st in (ex.get("sets", []) or ex.get("workout_sets", [])):
+                    if st.get("is_completed", True):
+                        reps = st.get("completed_reps") or st.get("target_reps") or 0
+                        weight = st.get("completed_weight") or st.get("target_weight") or 0.0
+                        vol += float(reps) * float(weight)
+            return vol
+
+        s0_vol = _get_vol(sessions[0])
+        s1_vol = _get_vol(sessions[1])
+        ov = progressive_overload(s0_vol, s1_vol)
+        overload_summary = f" Recent progression: {ov.label} ({s0_vol:,.0f}kg vs {s1_vol:,.0f}kg)."
+
     text_summary = (
         f"Analyzed {len(sessions)} completed sessions. "
         f"Total volume lifted: {total_volume:,.1f} kg across {total_sets} sets and {total_reps} reps. "
         f"Volume by muscle: {', '.join(f'{k}: {v:,.0f}kg' for k, v in active_volume_by_muscle.items()) or 'None recorded'}. "
         f"Most trained muscles: {', '.join(most_trained)}. "
         f"Recently untrained muscle groups: {', '.join(recently_untrained) if recently_untrained else 'None (all major groups trained)'}. "
-        f"Average rest between sessions: {avg_days_between} days." if avg_days_between else ""
+        f"Volume balance: {balance.score:.0f}/100 ({balance.label})."
+        f"{overload_summary}"
+        + (f" Average rest between sessions: {avg_days_between} days." if avg_days_between else "")
     )
 
     return {
@@ -542,6 +570,8 @@ def calculate_deterministic_statistics(sessions: List[Dict[str, Any]]) -> Dict[s
         "training_frequency_per_week": freq_per_week,
         "average_days_between_workouts": avg_days_between,
         "exercise_frequency": exercise_count,
+        "volume_balance_score": balance.score,
+        "volume_balance_label": balance.label,
         "text_summary": text_summary,
     }
 

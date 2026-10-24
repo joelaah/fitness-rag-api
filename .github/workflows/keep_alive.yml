@@ -1,0 +1,37 @@
+name: Keep Render Backend Warm
+
+on:
+  schedule:
+    # Run every 8 minutes to reliably beat Render's 15-minute inactivity spin-down,
+    # even when GitHub Actions runners experience queue delays.
+    - cron: '*/8 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  ping-render:
+    name: Ping PulseFit RAG Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API Health Endpoint
+        run: |
+          echo "Pinging PulseFit AI RAG backend to maintain warm container..."
+          
+          # Render free tier takes 30-60s to wake up if cold.
+          # Allow up to 90s and protect against curl non-zero exit codes.
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 20 --max-time 90 "https://fitness-rag-api.onrender.com/health" || echo "000")
+          echo "Initial HTTP status: $STATUS"
+          
+          if [ "$STATUS" = "200" ]; then
+            echo "Render backend is alive, warm, and returned 200 OK."
+          elif [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 500 ] 2>/dev/null; then
+            echo "Render backend responded with status: $STATUS"
+          else
+            echo "Instance was cold or spin-up in progress (status: $STATUS). Wake-up signal transmitted."
+            echo "Waiting 15 seconds before secondary verification ping..."
+            sleep 15
+            RETRY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 20 --max-time 60 "https://fitness-rag-api.onrender.com/health" || echo "000")
+            echo "Secondary HTTP status: $RETRY_STATUS"
+          fi
+
+          echo "Keep-alive routine completed successfully."
+          exit 0
