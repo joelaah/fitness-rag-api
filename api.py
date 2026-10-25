@@ -78,7 +78,6 @@ from nutrition_router import router as nutrition_router
 from fitness_math import (
     volume_balance_score,
     progressive_overload,
-    workout_intensity,
 )
 
 app.include_router(payment_router)
