@@ -640,17 +640,17 @@ def _generate_with_retry_and_fallback(
     context: str,
     system_instruction: str,
     max_retries: int = 2,
+    history: Optional[List[ChatMessage]] = None,
 ) -> str:
     """
-    Executes generate_answer using existing generate.py without modification.
+    Executes generate_answer using existing generate.py.
     Handles temporary 503 demand spikes via backoff and model parameter fallback.
     """
     models_to_try = [
-        "gemini-3.8-flash",
-        "gemini-3.6-flash",
-        "gemini-3.5-flash",
+        "gemini-2.5-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
         "gemini-flash-latest",
-        "gemini-3.7-flash",
     ]
     last_err = None
 
@@ -664,6 +664,7 @@ def _generate_with_retry_and_fallback(
                     model=model,
                     system_instruction=system_instruction,
                     temperature=0.2,
+                    history=history,
                 )
                 if result and result.strip():
                     return result
@@ -868,22 +869,35 @@ def get_recommendations(
             "nutrition_today": nutrition_today,
         }
 
-    # Step 4: RAG Retrieval from Qdrant via unmodified retrieve.py
-    query_text = (
-        f"Optimal workout programming, recovery, and progressive overload for "
-        f"muscles: {', '.join(stats['most_trained_muscle_groups'] + stats['recently_untrained_muscle_groups'])}."
-    )
+    # Step 4: Split Vector Retrieval targeting untrained muscle groups and fatigue recovery
+    untrained_str = ", ".join(stats["recently_untrained_muscle_groups"]) if stats["recently_untrained_muscle_groups"] else "full body muscular balance"
+    trained_str = ", ".join(stats["most_trained_muscle_groups"]) if stats["most_trained_muscle_groups"] else "systemic fatigue"
 
-    log.info("[RAG] retrieval started")
-    retrieved_knowledge = ""
+    untrained_query = f"Hypertrophy stimulus, movement selection, and programming for untrained muscle groups: {untrained_str}."
+    recovery_query = f"Fatigue management, recovery timelines, and progressive overload protocols for trained muscle groups: {trained_str}."
+
+    log.info("[RAG] focused retrieval started (untrained + recovery)")
+    retrieved_parts: list[str] = []
     chunk_count = 0
+
     try:
-        retrieved_knowledge = retrieve(query=query_text)
-        chunk_count = len([c for c in retrieved_knowledge.split("\n\n") if c.strip()])
-        log.info("[RAG] retrieved chunks: %d", chunk_count)
+        k1 = retrieve(query=untrained_query)
+        if k1:
+            retrieved_parts.append(k1)
+            chunk_count += len([c for c in k1.split("\n\n") if c.strip()])
     except Exception as e:
-        log.warning("RAG retrieval notice (proceeding with training context): %s", e)
-        log.info("[RAG] retrieved chunks: 0")
+        log.warning("RAG retrieval notice for untrained query: %s", e)
+
+    try:
+        k2 = retrieve(query=recovery_query)
+        if k2:
+            retrieved_parts.append(k2)
+            chunk_count += len([c for c in k2.split("\n\n") if c.strip()])
+    except Exception as e:
+        log.warning("RAG retrieval notice for recovery query: %s", e)
+
+    retrieved_knowledge = "\n\n".join(retrieved_parts)
+    log.info("[RAG] retrieved chunks: %d", chunk_count)
 
     # Step 5: Combine context & invoke unmodified generate.py
     nutrition_text_summary = (
@@ -1008,7 +1022,7 @@ def get_recommendations(
 # Conversational AI Chat Endpoint (RAG Grounded)
 # ---------------------------------------------------------------------------
 
-CHAT_SYSTEM_INSTRUCTION = """You are Aura Coach, an elite, encouraging, and evidence-based AI fitness assistant built into the Aura Fit mobile app.
+CHAT_SYSTEM_INSTRUCTION = """You are PulseFit AI Coach, an elite, encouraging, and evidence-based AI fitness assistant built into the PulseFit AI mobile app.
 You provide clear, actionable, and scientifically grounded answers on workout splits, biomechanics, exercise technique, nutrition, progressive overload, recovery, and injury prevention.
 Answer directly using the retrieved exercise science context when relevant.
 Keep responses concise, clear, and easy to read on mobile devices (use bullet points and bold highlights).
@@ -1024,9 +1038,10 @@ def chat_with_coach(
     Conversational RAG endpoint:
     1. Enforces endpoint rate limiting (max 20 req/min).
     2. Sanitizes input to prevent prompt injection and control character abuse.
-    3. Retrieves relevant fitness science documents from Qdrant via Cohere reranking.
+    3. Retrieves relevant fitness science documents from Qdrant via Cohere reranking,
+       preserving payload metadata and extracting accurate document citations.
     4. Constructs grounded context.
-    5. Generates conversational coaching advice using Gemini.
+    5. Generates conversational coaching advice using Gemini with full multi-turn history.
     """
     # Input sanitization
     query = request.message.strip()
@@ -1036,18 +1051,30 @@ def chat_with_coach(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Message cannot be empty.",
         )
-    log.info("[CHAT] query: '%s' from user=%s", query, user_id)
+    log.info("[CHAT] query: '%s' from user=%s (history_len=%d)", query, user_id, len(request.history or []))
 
     retrieved_knowledge = ""
-    sources = []
+    sources: list[str] = []
     try:
-        retrieved_knowledge = retrieve(query=query)
+        retrieval_res = retrieve(query=query, return_metadata=True)
+        if isinstance(retrieval_res, tuple):
+            retrieved_knowledge, payloads = retrieval_res
+            for p in payloads:
+                doc = p.get("document_name") or p.get("title")
+                if doc:
+                    cleaned_doc = doc.replace(".txt", "").replace("_", " ").title()
+                    if cleaned_doc and cleaned_doc not in sources:
+                        sources.append(cleaned_doc)
+        else:
+            retrieved_knowledge = retrieval_res
+
         if retrieved_knowledge:
             for block in retrieved_knowledge.split("\n\n"):
-                if block.startswith("## "):
-                    title = block.split("\n")[0].replace("## ", "").strip()
-                    if title and title not in sources:
-                        sources.append(title)
+                for line in block.split("\n"):
+                    if line.startswith("## "):
+                        title = line.replace("## ", "").strip()
+                        if title and title not in sources:
+                            sources.append(title)
     except Exception as e:
         log.warning("Chat RAG retrieval notice: %s", e)
 
@@ -1062,6 +1089,7 @@ def chat_with_coach(
             context=chat_context,
             system_instruction=CHAT_SYSTEM_INSTRUCTION,
             max_retries=2,
+            history=request.history,
         )
         return ChatResponse(
             reply=reply.strip(),

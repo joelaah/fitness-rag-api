@@ -398,9 +398,9 @@ def analyze_food_image_bytes(image_bytes: bytes, mime_type: str = "image/jpeg", 
             prompt += f"\nUser hint regarding this meal: '{meal_hint}'."
 
         models_to_try = [
-            "gemini-3.5-flash",
-            "gemini-3.8-flash",
-            "gemini-3.1-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
             "gemini-flash-latest",
         ]
 

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
+from typing import Optional, Any
 
 import cohere
 from dotenv import load_dotenv
@@ -162,7 +162,8 @@ def retrieve(
     rerank_top_n: int = RERANK_TOP_N,
     category: Optional[str] = None,
     separator: str = "\n\n",
-) -> str:
+    return_metadata: bool = False,
+) -> Any:
     """
     Two-stage retrieval: broad vector recall → precision Cohere reranking.
 
@@ -171,14 +172,14 @@ def retrieve(
            (task_type="RETRIEVAL_QUERY", output_dimensionality=768).
         2. Optionally pre-filters the collection by category using Qdrant's
            Filter and FieldCondition.
-        3. Retrieves the top 25 candidate chunks from Qdrant via cosine
+        3. Retrieves candidate chunks and their payloads from Qdrant via cosine
            similarity.
 
     Stage 2 — Reranking (Precision):
-        4. Passes all 25 candidates + query to the Cohere Rerank API
-           (rerank-v3.5 cross-encoder model).
-        5. Returns only the top 3 highest-scoring chunks as a concatenated
-           string to the generator.
+        4. Passes candidate chunks to Cohere Rerank API (rerank-v3.5).
+        5. Preserves payload metadata (document_name, category) associated with
+           each chunk.
+        6. Formats each chunk with its document citation header if available.
 
     Args:
         query: User's natural language question or search query.
@@ -188,16 +189,15 @@ def retrieve(
         collection_name: Target collection name (default: "documents").
         top_k: Number of nearest matches for Stage 1 recall (default: 25).
         rerank_top_n: Number of chunks to keep after reranking (default: 3).
-        category: Optional category string to pre-filter results
-                  (e.g. "HR", "Technical", "Legal"). If None, searches
-                  across all categories.
+        category: Optional category string to pre-filter results.
         separator: String delimiter used to join extracted payloads.
+        return_metadata: If True, returns tuple (joined_text, list_of_payload_dicts).
 
     Returns:
-        A single concatenated string of the reranked text payloads.
+        Concatenated reranked string, or (joined_text, payloads) if return_metadata=True.
     """
     if not query or not query.strip():
-        return ""
+        return ("", []) if return_metadata else ""
 
     if gemini is None:
         gemini = init_gemini_client()
@@ -249,10 +249,12 @@ def retrieve(
         with_payload=True,
     )
 
-    # Extract text payload from results
+    # Extract text and preserve payload metadata from results
+    candidate_payloads: list[dict] = []
     candidate_chunks: list[str] = []
     for point in search_response.points:
         if point.payload and "text" in point.payload:
+            candidate_payloads.append(dict(point.payload))
             candidate_chunks.append(str(point.payload["text"]))
 
     log.info(
@@ -261,23 +263,70 @@ def retrieve(
     )
 
     if not candidate_chunks:
-        return ""
+        return ("", []) if return_metadata else ""
 
-    # ── Stage 2: Cohere reranking (precision) ──────────────────────────
+    # ── Stage 2: Cohere reranking (precision) with payload preservation ─────────
 
-    reranked_chunks = rerank_chunks(
-        query=query,
-        chunks=candidate_chunks,
-        co=co,
-        top_n=rerank_top_n,
-    )
+    reranked_chunks: list[str] = []
+    reranked_payloads: list[dict] = []
+
+    try:
+        if co is None:
+            co = init_cohere_client()
+
+        log.info(
+            "Reranking %d chunks with Cohere %s (top_n=%d)...",
+            len(candidate_chunks), RERANK_MODEL, rerank_top_n,
+        )
+
+        response = co.rerank(
+            model=RERANK_MODEL,
+            query=query,
+            documents=candidate_chunks,
+            top_n=rerank_top_n,
+        )
+
+        for result in response.results:
+            payload = candidate_payloads[result.index]
+            reranked_payloads.append(payload)
+
+            doc_name = payload.get("document_name") or payload.get("title") or ""
+            text = str(payload.get("text", "")).strip()
+
+            if doc_name:
+                clean_title = doc_name.replace(".txt", "").replace("_", " ").title()
+                chunk_str = f"## {clean_title}\n{text}" if not text.startswith("## ") else text
+            else:
+                chunk_str = text
+
+            reranked_chunks.append(chunk_str)
+            log.info(
+                "  Rerank #%d  score=%.4f  (original index %d, %d chars)",
+                len(reranked_chunks), result.relevance_score, result.index, len(chunk_str),
+            )
+    except Exception as exc:
+        log.warning("Cohere rerank fallback to top vectors: %s", exc)
+        reranked_chunks = []
+        reranked_payloads = candidate_payloads[:rerank_top_n]
+        for payload in reranked_payloads:
+            doc_name = payload.get("document_name") or payload.get("title") or ""
+            text = str(payload.get("text", "")).strip()
+            if doc_name:
+                clean_title = doc_name.replace(".txt", "").replace("_", " ").title()
+                chunk_str = f"## {clean_title}\n{text}" if not text.startswith("## ") else text
+            else:
+                chunk_str = text
+            reranked_chunks.append(chunk_str)
 
     log.info(
         "Stage 2 complete: %d chunks after reranking (from %d candidates).",
         len(reranked_chunks), len(candidate_chunks),
     )
 
-    return separator.join(reranked_chunks)
+    joined_text = separator.join(reranked_chunks)
+    if return_metadata:
+        return joined_text, reranked_payloads
+    return joined_text
 
 
 if __name__ == "__main__":

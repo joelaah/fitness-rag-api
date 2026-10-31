@@ -24,7 +24,7 @@ from google.genai import types
 load_dotenv()
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-GENERATION_MODEL = "gemini-3.8-flash"
+GENERATION_MODEL = "gemini-2.5-flash"
 
 SYSTEM_INSTRUCTION = (
     "You are a strict question-answering assistant. "
@@ -61,6 +61,13 @@ def init_gemini_client(api_key: Optional[str] = None) -> genai.Client:
 # ---------------------------------------------------------------------------
 
 
+FALLBACK_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-flash-latest",
+]
+
 def generate_answer(
     query: str,
     context: str,
@@ -68,6 +75,7 @@ def generate_answer(
     model: str = GENERATION_MODEL,
     temperature: float = 0.0,
     system_instruction: str = SYSTEM_INSTRUCTION,
+    history: Optional[list] = None,
 ) -> str:
     """
     Generate a grounded answer to a user query using retrieved context.
@@ -82,10 +90,11 @@ def generate_answer(
         gemini:             Authenticated GenAI client (lazily initialised if
                             omitted).
         model:              Gemini model to use for generation
-                            (default: "gemini-3.6-flash").
+                            (default: "gemini-2.5-flash").
         temperature:        Sampling temperature (default: 0.0 for
                             deterministic output).
         system_instruction: System prompt that constrains the model behaviour.
+        history:            Optional list of prior chat turns (ChatMessage or dict).
 
     Returns:
         The model's generated answer as a plain-text string.
@@ -102,24 +111,82 @@ def generate_answer(
         f"Question: {query}"
     )
 
-    log.info(
-        "Generating answer with %s (temperature=%.1f)...",
-        model,
-        temperature,
-    )
+    contents: list[types.Content] | str = user_prompt
+    if history:
+        raw_turns: list[tuple[str, str]] = []
+        for msg in history:
+            role = getattr(msg, "role", None) or (msg.get("role") if isinstance(msg, dict) else "user")
+            model_role = "model" if role in ("assistant", "model") else "user"
+            content_text = getattr(msg, "content", None) or (msg.get("content") if isinstance(msg, dict) else str(msg))
+            if content_text and str(content_text).strip():
+                raw_turns.append((model_role, str(content_text).strip()))
 
-    response = gemini.models.generate_content(
-        model=model,
-        contents=user_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=temperature,
-        ),
-    )
+        # Google GenAI requires:
+        # 1. The first content turn MUST have role 'user' (drop leading assistant/welcome messages).
+        while raw_turns and raw_turns[0][0] == "model":
+            raw_turns.pop(0)
 
-    answer = response.text or ""
-    log.info("Generation complete (%d chars).", len(answer))
-    return answer
+        # 2. Alternating roles (merge consecutive turns of same role)
+        merged_turns: list[tuple[str, str]] = []
+        for r, t in raw_turns:
+            if merged_turns and merged_turns[-1][0] == r:
+                merged_turns[-1] = (r, merged_turns[-1][1] + "\n\n" + t)
+            else:
+                merged_turns.append((r, t))
+
+        # 3. If prior history ended with 'user', remove it so user_prompt is the active turn
+        if merged_turns and merged_turns[-1][0] == "user":
+            merged_turns.pop()
+
+        if merged_turns:
+            msg_contents: list[types.Content] = []
+            for r, t in merged_turns:
+                msg_contents.append(
+                    types.Content(
+                        role=r,
+                        parts=[types.Part.from_text(text=t)],
+                    )
+                )
+            msg_contents.append(
+                types.Content(
+                    role="user",
+                    parts=[types.Part.from_text(text=user_prompt)],
+                )
+            )
+            contents = msg_contents
+
+    models_to_try = [model]
+    if model == GENERATION_MODEL:
+        for fb in FALLBACK_MODELS:
+            if fb not in models_to_try:
+                models_to_try.append(fb)
+
+    last_exc = None
+    for target_model in models_to_try:
+        try:
+            log.info(
+                "Generating answer with %s (temperature=%.1f)...",
+                target_model,
+                temperature,
+            )
+            response = gemini.models.generate_content(
+                model=target_model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=temperature,
+                ),
+            )
+            answer = response.text or ""
+            log.info("Generation complete (%d chars).", len(answer))
+            return answer
+        except Exception as exc:
+            last_exc = exc
+            log.warning("Generation attempt failed with %s: %s", target_model, exc)
+
+    if last_exc:
+        raise last_exc
+    return ""
 
 
 # ---------------------------------------------------------------------------
