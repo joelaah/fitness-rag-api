@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 import supabase
 
 # Import existing RAG functions WITHOUT MODIFICATION
-from retrieve import retrieve
+from retrieve import retrieve, init_qdrant_client
 from generate import generate_answer
 
 # ---------------------------------------------------------------------------
@@ -691,14 +691,41 @@ def root():
     }
 
 
+_qdrant_client: Optional[Any] = None
+
+
+def get_qdrant_client():
+    """Lazily initialize or return cached QdrantClient instance."""
+    global _qdrant_client
+    if _qdrant_client is None:
+        try:
+            _qdrant_client = init_qdrant_client()
+        except Exception as e:
+            log.warning("Could not initialize Qdrant client: %s", e)
+            return None
+    return _qdrant_client
+
+
 @app.get("/health", tags=["System"])
 def health_check():
-    """Health check endpoint to verify API and connected components."""
+    """Health check endpoint to verify API and connected components (pings Qdrant to prevent cloud suspension)."""
+    global _qdrant_client
+    qdrant_ok = False
+    try:
+        q_client = get_qdrant_client()
+        if q_client:
+            q_client.get_collections()
+            qdrant_ok = True
+    except Exception as e:
+        log.warning("Qdrant keep-alive ping failed: %s", e)
+        _qdrant_client = None
+
     return {
         "status": "ok",
         "service": "fitness_rag_api",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY),
+        "qdrant_active": qdrant_ok,
     }
 
 
