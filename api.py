@@ -30,7 +30,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices, ConfigDict, ValidationError, field_validator
 import supabase
 
 # Import existing RAG functions WITHOUT MODIFICATION
@@ -229,50 +229,258 @@ class RecommendRequest(BaseModel):
 
 
 class RecommendationSummary(BaseModel):
-    sessions_analyzed: int
-    total_volume: float
-    total_sets: int
-    total_reps: int
-    volume_by_muscle_group: Dict[str, float]
-    most_trained_muscle_groups: List[str]
-    recently_untrained_muscle_groups: List[str]
-    training_frequency_per_week: Optional[float] = None
-    average_days_between_workouts: Optional[float] = None
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    sessions_analyzed: int = Field(
+        ...,
+        validation_alias=AliasChoices("sessions_analyzed", "total_sessions", "sessionsAnalyzed", "sessions_count"),
+    )
+    total_volume: float = Field(
+        ...,
+        validation_alias=AliasChoices("total_volume", "volume", "totalVolume", "total_volume_kg"),
+    )
+    total_sets: int = Field(
+        ...,
+        validation_alias=AliasChoices("total_sets", "sets", "totalSets"),
+    )
+    total_reps: int = Field(
+        ...,
+        validation_alias=AliasChoices("total_reps", "reps", "totalReps"),
+    )
+    volume_by_muscle_group: Dict[str, float] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("volume_by_muscle_group", "muscle_volume", "volumeByMuscleGroup"),
+    )
+    most_trained_muscle_groups: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("most_trained_muscle_groups", "most_trained", "mostTrainedMuscleGroups"),
+    )
+    recently_untrained_muscle_groups: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("recently_untrained_muscle_groups", "recently_untrained", "untrained_muscle_groups", "recentlyUntrainedMuscleGroups"),
+    )
+    training_frequency_per_week: Optional[float] = Field(
+        default=None,
+        validation_alias=AliasChoices("training_frequency_per_week", "frequency_per_week", "trainingFrequencyPerWeek"),
+    )
+    average_days_between_workouts: Optional[float] = Field(
+        default=None,
+        validation_alias=AliasChoices("average_days_between_workouts", "avg_days_between_workouts", "averageDaysBetweenWorkouts"),
+    )
+
+    @field_validator("volume_by_muscle_group", mode="before")
+    @classmethod
+    def _coerce_volume_map(cls, v: Any) -> Dict[str, float]:
+        if not isinstance(v, dict):
+            return {}
+        res = {}
+        for k, val in v.items():
+            if val is not None:
+                try:
+                    res[str(k)] = float(val)
+                except (ValueError, TypeError):
+                    pass
+        return res
+
+    @field_validator("most_trained_muscle_groups", "recently_untrained_muscle_groups", mode="before")
+    @classmethod
+    def _coerce_muscle_groups(cls, v: Any) -> List[str]:
+        if not isinstance(v, list):
+            return []
+        return [str(x) for x in v if x is not None]
 
 
 class SingleRecommendation(BaseModel):
-    title: str
-    category: str
-    description: str
-    priority: str = "normal"
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    title: str = Field(
+        ...,
+        validation_alias=AliasChoices("title", "headline", "name", "recommendation", "rec_title"),
+    )
+    category: str = Field(
+        default="general",
+        validation_alias=AliasChoices("category", "type", "focus", "muscle_group", "tag"),
+    )
+    description: str = Field(
+        ...,
+        validation_alias=AliasChoices("description", "details", "explanation", "text", "guidance", "action"),
+    )
+    priority: str = Field(
+        default="normal",
+        validation_alias=AliasChoices("priority", "urgency", "importance", "level"),
+    )
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def _coerce_category(cls, v: Any) -> str:
+        return "general" if v is None else str(v)
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _coerce_priority(cls, v: Any) -> str:
+        return "normal" if v is None else str(v)
 
 
 class RecoveryItem(BaseModel):
-    title: str
-    description: str
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    title: str = Field(
+        ...,
+        validation_alias=AliasChoices("title", "headline", "name", "protocol", "recovery_title"),
+    )
+    description: str = Field(
+        ...,
+        validation_alias=AliasChoices("description", "details", "explanation", "guidance", "text"),
+    )
 
 
 class NextExerciseItem(BaseModel):
-    name: str
-    reason: str
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    name: str = Field(
+        ...,
+        validation_alias=AliasChoices("name", "exercise", "exercise_name", "title", "movement"),
+    )
+    reason: str = Field(
+        ...,
+        validation_alias=AliasChoices("reason", "why", "description", "purpose", "rationale", "notes"),
+    )
 
 
 class NextWorkout(BaseModel):
-    title: str
-    reason: str
-    exercises: List[NextExerciseItem]
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    title: str = Field(
+        ...,
+        validation_alias=AliasChoices("title", "name", "workout_name", "routine", "routine_name"),
+    )
+    reason: str = Field(
+        ...,
+        validation_alias=AliasChoices("reason", "why", "description", "rationale", "purpose", "focus"),
+    )
+    exercises: List[NextExerciseItem] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("exercises", "movements", "workout_exercises", "items", "exercise_list"),
+    )
+
+    @field_validator("exercises", mode="before")
+    @classmethod
+    def _coerce_exercises(cls, v: Any) -> List[Any]:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            cleaned = []
+            for item in v:
+                if isinstance(item, (dict, NextExerciseItem)):
+                    cleaned.append(item)
+                elif isinstance(item, str) and item.strip():
+                    cleaned.append({"name": item.strip(), "reason": "Target exercise"})
+            return cleaned
+        return []
 
 
 class RecommendationResponse(BaseModel):
-    summary: RecommendationSummary
-    recommendations: List[SingleRecommendation]
-    recovery: List[RecoveryItem]
-    next_workout: NextWorkout
-    generated_at: str
-    sessions_analyzed: int
-    cached: bool = False
-    pipeline_source: str = "rag"  # "rag" or "fallback"
-    nutrition_today: Optional[Dict[str, Any]] = None
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    summary: RecommendationSummary = Field(
+        ...,
+        validation_alias=AliasChoices("summary", "workout_summary", "stats_summary"),
+    )
+    recommendations: List[SingleRecommendation] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("recommendations", "suggestions", "recs", "recommendation_list"),
+    )
+    recovery: List[RecoveryItem] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("recovery", "recovery_items", "recovery_guidance", "recovery_protocol"),
+    )
+    next_workout: NextWorkout = Field(
+        ...,
+        validation_alias=AliasChoices("next_workout", "nextWorkout", "suggested_workout", "next_routine", "upcoming_workout"),
+    )
+    generated_at: str = Field(
+        ...,
+        validation_alias=AliasChoices("generated_at", "timestamp", "created_at", "generatedAt"),
+    )
+    sessions_analyzed: int = Field(
+        ...,
+        validation_alias=AliasChoices("sessions_analyzed", "total_sessions", "sessionsAnalyzed"),
+    )
+    cached: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("cached", "is_cached"),
+    )
+    pipeline_source: str = Field(
+        default="rag",
+        validation_alias=AliasChoices("pipeline_source", "source", "pipelineSource"),
+    )
+    nutrition_today: Optional[Dict[str, Any]] = Field(
+        default=None,
+        validation_alias=AliasChoices("nutrition_today", "nutritionToday", "nutrition"),
+    )
+
+    @field_validator("recommendations", mode="before")
+    @classmethod
+    def _coerce_recommendations(cls, v: Any) -> List[Any]:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return [x for x in v if isinstance(x, (dict, SingleRecommendation))]
+        return []
+
+    @field_validator("recovery", mode="before")
+    @classmethod
+    def _coerce_recovery(cls, v: Any) -> List[Any]:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return [x for x in v if isinstance(x, (dict, RecoveryItem))]
+        return []
+
+    @field_validator("cached", mode="before")
+    @classmethod
+    def _coerce_cached(cls, v: Any) -> bool:
+        return bool(v) if v is not None else False
+
+    @field_validator("pipeline_source", mode="before")
+    @classmethod
+    def _coerce_pipeline_source(cls, v: Any) -> str:
+        return str(v) if v else "rag"
+
+
+class LLMRecommendationOutput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    recommendations: List[SingleRecommendation] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("recommendations", "suggestions", "recs", "recommendation_list"),
+    )
+    recovery: List[RecoveryItem] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("recovery", "recovery_items", "recovery_guidance", "recovery_protocol"),
+    )
+    next_workout: NextWorkout = Field(
+        ...,
+        validation_alias=AliasChoices("next_workout", "nextWorkout", "suggested_workout", "next_routine", "upcoming_workout"),
+    )
+
+    @field_validator("recommendations", mode="before")
+    @classmethod
+    def _coerce_recommendations(cls, v: Any) -> List[Any]:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return [x for x in v if isinstance(x, (dict, SingleRecommendation))]
+        return []
+
+    @field_validator("recovery", mode="before")
+    @classmethod
+    def _coerce_recovery(cls, v: Any) -> List[Any]:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return [x for x in v if isinstance(x, (dict, RecoveryItem))]
+        return []
 
 
 class ChatMessage(BaseModel):
@@ -627,12 +835,28 @@ def _normalize_uuid(val: str) -> str:
 
 
 def _clean_json_output(raw_text: str) -> Dict[str, Any]:
-    """Strip markdown code fence blocks if LLM wrapped output."""
+    """Strip markdown code fence blocks if LLM wrapped output, extract JSON object, and unwrap common wrappers."""
     cleaned = raw_text.strip()
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", cleaned)
     if match:
         cleaned = match.group(1).strip()
-    return json.loads(cleaned)
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        obj_match = re.search(r"\{[\s\S]*\}", cleaned)
+        if obj_match:
+            data = json.loads(obj_match.group(0))
+        else:
+            raise
+
+    if isinstance(data, dict):
+        for wrapper_key in ("data", "response", "result", "output"):
+            if wrapper_key in data and isinstance(data[wrapper_key], dict):
+                inner = data[wrapper_key]
+                if any(k in inner for k in ("recommendations", "suggestions", "next_workout", "suggested_workout")):
+                    return inner
+
+    return data
 
 
 def _generate_with_retry_and_fallback(
@@ -641,39 +865,74 @@ def _generate_with_retry_and_fallback(
     system_instruction: str,
     max_retries: int = 2,
     history: Optional[List[ChatMessage]] = None,
+    response_mime_type: Optional[str] = None,
+    response_schema: Optional[Any] = None,
 ) -> str:
     """
     Executes generate_answer using existing generate.py.
-    Handles temporary 503 demand spikes via backoff and model parameter fallback.
+    generate.py internally iterates through GENERATION_MODEL and FALLBACK_MODELS.
+    Retries with a short delay if transient network errors occur, then fails fast
+    so the deterministic server fallback can return HTTP 200 within mobile latency budget.
     """
-    models_to_try = [
-        "gemini-2.5-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-flash-latest",
-    ]
     last_err = None
-
-    for model in models_to_try:
-        for attempt in range(max_retries):
-            try:
-                log.info("Attempting generate_answer with model=%s (attempt %d)...", model, attempt + 1)
-                result = generate_answer(
-                    query=query,
-                    context=context,
-                    model=model,
-                    system_instruction=system_instruction,
-                    temperature=0.2,
-                    history=history,
-                )
-                if result and result.strip():
-                    return result
-            except Exception as e:
-                last_err = e
-                log.warning("generate_answer error with %s (attempt %d): %s", model, attempt + 1, e)
-                time.sleep(1.0 * (attempt + 1))
+    for attempt in range(max_retries):
+        try:
+            log.info("Attempting generate_answer (attempt %d/%d)...", attempt + 1, max_retries)
+            result = generate_answer(
+                query=query,
+                context=context,
+                system_instruction=system_instruction,
+                temperature=0.2,
+                history=history,
+                response_mime_type=response_mime_type,
+                response_schema=response_schema,
+            )
+            if result and result.strip():
+                return result
+        except Exception as e:
+            last_err = e
+            log.warning("generate_answer attempt %d failed: %s", attempt + 1, e)
+            if attempt < max_retries - 1:
+                time.sleep(0.5)
 
     raise RuntimeError(f"All generation attempts failed. Last error: {last_err}")
+
+
+def _build_fallback_recommendations(stats: Dict[str, Any]) -> Dict[str, Any]:
+    """Generates deterministic safe fallback recommendations when model generation/validation fails."""
+    untrained = stats.get("recently_untrained_muscle_groups") or []
+    untrained_focus = untrained[0] if untrained else "Lower Body"
+    untrained_str = ", ".join(untrained) if untrained else "all major muscle groups"
+    return {
+        "recommendations": [
+            {
+                "title": "Consistent Progressive Overload",
+                "category": "progression",
+                "description": "Gradually increase reps or load on primary compound lifts by 2-5% week over week.",
+                "priority": "high",
+            },
+            {
+                "title": "Address Untrained Muscle Groups",
+                "category": "volume",
+                "description": f"Incorporate direct sets for {untrained_str} to ensure structural balance.",
+                "priority": "normal",
+            },
+        ],
+        "recovery": [
+            {
+                "title": "Active Recovery & Sleep",
+                "description": "Ensure 7-9 hours of quality sleep and maintain hydration to facilitate muscle protein synthesis.",
+            }
+        ],
+        "next_workout": {
+            "title": f"Focus: {untrained_focus}",
+            "reason": "Balances your recent workout volume and allows prior muscle groups to fully recover.",
+            "exercises": [
+                {"name": "Barbell Squats", "reason": "High-recruitment compound exercise."},
+                {"name": "Romanian Deadlifts", "reason": "Hamstrings and posterior chain reinforcement."},
+            ],
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -764,9 +1023,19 @@ def get_recommendations(
                 cached_rec = cached_res.data[0]
                 rec_json = cached_rec.get("recommendation_json", {})
                 if rec_json:
-                    log.info("[API] returning cached recommendation from Supabase for user=%s", user_id)
-                    rec_json["cached"] = True
-                    return rec_json
+                    if isinstance(rec_json, str):
+                        try:
+                            rec_json = json.loads(rec_json)
+                        except Exception:
+                            rec_json = {}
+                    if isinstance(rec_json, dict) and rec_json:
+                        rec_json["cached"] = True
+                        try:
+                            validated_cached = RecommendationResponse.model_validate(rec_json)
+                            log.info("[API] returning validated cached recommendation from Supabase for user=%s", user_id)
+                            return validated_cached.model_dump()
+                        except Exception as val_err:
+                            log.warning("[API] cached recommendation failed validation (schema drift/corrupted); discarding and regenerating: %s", val_err)
         except Exception as e:
             log.warning("Cache lookup notice: %s", e)
 
@@ -854,7 +1123,7 @@ def get_recommendations(
     # Handle completely empty history gracefully without fake stats
     if stats["sessions_analyzed"] == 0:
         now_iso = datetime.now(timezone.utc).isoformat()
-        return {
+        empty_response = {
             "summary": {
                 "sessions_analyzed": 0,
                 "total_volume": 0.0,
@@ -895,6 +1164,7 @@ def get_recommendations(
             "pipeline_source": "rag",
             "nutrition_today": nutrition_today,
         }
+        return RecommendationResponse.model_validate(empty_response).model_dump()
 
     # Step 4: Split Vector Retrieval targeting untrained muscle groups and fatigue recovery
     untrained_str = ", ".join(stats["recently_untrained_muscle_groups"]) if stats["recently_untrained_muscle_groups"] else "full body muscular balance"
@@ -951,76 +1221,61 @@ def get_recommendations(
 
     log.info("[RAG] generation started")
     pipeline_source = "rag"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    summary_data = {
+        "sessions_analyzed": stats["sessions_analyzed"],
+        "total_volume": stats["total_volume"],
+        "total_sets": stats["total_sets"],
+        "total_reps": stats["total_reps"],
+        "volume_by_muscle_group": stats["volume_by_muscle_group"],
+        "most_trained_muscle_groups": stats["most_trained_muscle_groups"],
+        "recently_untrained_muscle_groups": stats["recently_untrained_muscle_groups"],
+        "training_frequency_per_week": stats["training_frequency_per_week"],
+        "average_days_between_workouts": stats["average_days_between_workouts"],
+    }
+
     try:
         raw_answer = _generate_with_retry_and_fallback(
             query=generator_query,
             context=generator_context,
             system_instruction=COACH_SYSTEM_INSTRUCTION,
+            response_mime_type="application/json",
+            response_schema=LLMRecommendationOutput,
         )
         parsed_llm_json = _clean_json_output(raw_answer)
         log.info("[RAG] generation completed")
-    except Exception as e:
-        log.error("Failed to generate or parse recommendation JSON from RAG pipeline: %s", e)
-        pipeline_source = "fallback"
-        parsed_llm_json = {
-            "recommendations": [
-                {
-                    "title": "Consistent Progressive Overload",
-                    "category": "progression",
-                    "description": "Gradually increase reps or load on primary compound lifts by 2-5% week over week.",
-                    "priority": "high",
-                },
-                {
-                    "title": "Address Untrained Muscle Groups",
-                    "category": "volume",
-                    "description": f"Incorporate direct sets for {', '.join(stats['recently_untrained_muscle_groups'])} to ensure structural balance.",
-                    "priority": "normal",
-                },
-            ],
-            "recovery": [
-                {
-                    "title": "Active Recovery & Sleep",
-                    "description": "Ensure 7-9 hours of quality sleep and maintain hydration to facilitate muscle protein synthesis.",
-                }
-            ],
-            "next_workout": {
-                "title": f"Focus: {stats['recently_untrained_muscle_groups'][0] if stats['recently_untrained_muscle_groups'] else 'Lower Body'}",
-                "reason": "Balances your recent workout volume and allows prior muscle groups to fully recover.",
-                "exercises": [
-                    {"name": "Barbell Squats", "reason": "High-recruitment compound exercise."},
-                    {"name": "Romanian Deadlifts", "reason": "Hamstrings and posterior chain reinforcement."},
-                ],
-            },
-        }
 
-    now_iso = datetime.now(timezone.utc).isoformat()
-
-    # Step 6: Construct final response binding deterministic stats with AI recommendations
-    response_data = {
-        "summary": {
+        llm_output = LLMRecommendationOutput.model_validate(parsed_llm_json)
+        candidate_response = {
+            "summary": summary_data,
+            "recommendations": [r.model_dump() for r in llm_output.recommendations],
+            "recovery": [rc.model_dump() for rc in llm_output.recovery],
+            "next_workout": llm_output.next_workout.model_dump(),
+            "generated_at": now_iso,
             "sessions_analyzed": stats["sessions_analyzed"],
-            "total_volume": stats["total_volume"],
-            "total_sets": stats["total_sets"],
-            "total_reps": stats["total_reps"],
-            "volume_by_muscle_group": stats["volume_by_muscle_group"],
-            "most_trained_muscle_groups": stats["most_trained_muscle_groups"],
-            "recently_untrained_muscle_groups": stats["recently_untrained_muscle_groups"],
-            "training_frequency_per_week": stats["training_frequency_per_week"],
-            "average_days_between_workouts": stats["average_days_between_workouts"],
-        },
-        "recommendations": parsed_llm_json.get("recommendations", []),
-        "recovery": parsed_llm_json.get("recovery", []),
-        "next_workout": parsed_llm_json.get("next_workout", {
-            "title": "Balanced Full Body Session",
-            "reason": "Promotes full recovery and consistent muscular adaptation.",
-            "exercises": [],
-        }),
-        "generated_at": now_iso,
-        "sessions_analyzed": stats["sessions_analyzed"],
-        "cached": False,
-        "pipeline_source": pipeline_source,
-        "nutrition_today": nutrition_today,
-    }
+            "cached": False,
+            "pipeline_source": "rag",
+            "nutrition_today": nutrition_today,
+        }
+        validated_response = RecommendationResponse.model_validate(candidate_response)
+        response_data = validated_response.model_dump()
+    except Exception as e:
+        log.error("Failed to generate or validate recommendation JSON from RAG pipeline: %s", e)
+        pipeline_source = "fallback"
+        fallback_data = _build_fallback_recommendations(stats)
+        candidate_fallback = {
+            "summary": summary_data,
+            "recommendations": fallback_data["recommendations"],
+            "recovery": fallback_data["recovery"],
+            "next_workout": fallback_data["next_workout"],
+            "generated_at": now_iso,
+            "sessions_analyzed": stats["sessions_analyzed"],
+            "cached": False,
+            "pipeline_source": "fallback",
+            "nutrition_today": nutrition_today,
+        }
+        validated_response = RecommendationResponse.model_validate(candidate_fallback)
+        response_data = validated_response.model_dump()
 
     # Step 7: Store in Supabase ai_recommendations table
     if sb_admin:

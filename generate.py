@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
+from typing import Optional, Any
 
 from dotenv import load_dotenv
 from google import genai
@@ -76,6 +76,8 @@ def generate_answer(
     temperature: float = 0.0,
     system_instruction: str = SYSTEM_INSTRUCTION,
     history: Optional[list] = None,
+    response_mime_type: Optional[str] = None,
+    response_schema: Optional[Any] = None,
 ) -> str:
     """
     Generate a grounded answer to a user query using retrieved context.
@@ -95,6 +97,8 @@ def generate_answer(
                             deterministic output).
         system_instruction: System prompt that constrains the model behaviour.
         history:            Optional list of prior chat turns (ChatMessage or dict).
+        response_mime_type: Optional MIME type for structured response (e.g. "application/json").
+        response_schema:    Optional Pydantic schema or type to constrain the output.
 
     Returns:
         The model's generated answer as a plain-text string.
@@ -169,14 +173,38 @@ def generate_answer(
                 target_model,
                 temperature,
             )
-            response = gemini.models.generate_content(
-                model=target_model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=temperature,
-                ),
-            )
+            config_kwargs: dict[str, Any] = {
+                "system_instruction": system_instruction,
+                "temperature": temperature,
+            }
+            if response_mime_type:
+                config_kwargs["response_mime_type"] = response_mime_type
+            if response_schema is not None:
+                config_kwargs["response_schema"] = response_schema
+
+            try:
+                response = gemini.models.generate_content(
+                    model=target_model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(**config_kwargs),
+                )
+            except Exception as exc:
+                if "response_schema" in config_kwargs:
+                    log.warning(
+                        "Generation with response_schema failed on %s: %s. Retrying with response_mime_type only...",
+                        target_model,
+                        exc,
+                    )
+                    retry_kwargs = dict(config_kwargs)
+                    retry_kwargs.pop("response_schema", None)
+                    response = gemini.models.generate_content(
+                        model=target_model,
+                        contents=contents,
+                        config=types.GenerateContentConfig(**retry_kwargs),
+                    )
+                else:
+                    raise
+
             answer = response.text or ""
             log.info("Generation complete (%d chars).", len(answer))
             return answer
